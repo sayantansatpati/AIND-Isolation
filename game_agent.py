@@ -35,7 +35,8 @@ def custom_score(game, player):
         The heuristic value of the current game state to the specified player.
     """
     # TODO: finish this function!
-    raise NotImplementedError
+    player_moves = game.get_legal_moves(player)
+    return float(len(player_moves))
 
 
 def custom_score_2(game, player):
@@ -61,7 +62,9 @@ def custom_score_2(game, player):
         The heuristic value of the current game state to the specified player.
     """
     # TODO: finish this function!
-    raise NotImplementedError
+    player_moves = game.get_legal_moves(player)
+    opponent_moves = game.get_legal_moves(game.get_opponent(player))
+    return float(len(player_moves) - len(opponent_moves))
 
 
 def custom_score_3(game, player):
@@ -87,7 +90,9 @@ def custom_score_3(game, player):
         The heuristic value of the current game state to the specified player.
     """
     # TODO: finish this function!
-    raise NotImplementedError
+    player_moves = game.get_legal_moves(player)
+    opponent_moves = game.get_legal_moves(game.get_opponent(player))
+    return float(len(player_moves) - 2 * len(opponent_moves))
 
 
 class IsolationPlayer:
@@ -213,7 +218,54 @@ class MinimaxPlayer(IsolationPlayer):
             raise SearchTimeout()
 
         # TODO: finish this function!
-        raise NotImplementedError
+        best_score = float("-inf")
+        best_move = (-1,-1)
+        for m in game.get_legal_moves():
+            v = self.min_value(game.forecast_move(m), depth - 1)
+            if v > best_score:
+                best_score = v
+                best_move = m
+        return best_move
+
+    # Helper functions for minimax
+    def terminal_test(self, game, depth):
+        """ Return True if the game is over for the active player
+        and False otherwise OR depth == 0.
+        """
+        if self.time_left() < self.TIMER_THRESHOLD:
+            raise SearchTimeout()
+
+        return not bool(game.get_legal_moves()) or (depth == 0)
+
+    def min_value(self, game, depth):
+        """ Return the value for a win (+1) if the game is over,
+        otherwise return the minimum value over all legal child
+        nodes.
+        """
+        if self.time_left() < self.TIMER_THRESHOLD:
+            raise SearchTimeout()
+
+        if self.terminal_test(game, depth):
+            return self.score(game, self)
+        v = float("inf")
+        for m in game.get_legal_moves():
+            v = min(v, self.max_value(game.forecast_move(m), depth - 1))
+        return v
+
+    def max_value(self, game, depth):
+        """ Return the value for a loss (-1) if the game is over,
+        otherwise return the maximum value over all legal child
+        nodes.
+        """
+        if self.time_left() < self.TIMER_THRESHOLD:
+            raise SearchTimeout()
+
+        if self.terminal_test(game, depth):
+            return self.score(game, self)
+        v = float("-inf")
+        for m in game.get_legal_moves():
+            v = max(v, self.min_value(game.forecast_move(m), depth - 1))
+        return v
 
 
 class AlphaBetaPlayer(IsolationPlayer):
@@ -255,7 +307,18 @@ class AlphaBetaPlayer(IsolationPlayer):
         self.time_left = time_left
 
         # TODO: finish this function!
-        raise NotImplementedError
+        best_move = (-1,-1)
+
+        try:
+            depth = 1
+            while True:
+                best_move = self.alphabeta(game, depth)
+                depth += 1
+        except SearchTimeout:
+            pass
+
+        return best_move
+
 
     def alphabeta(self, game, depth, alpha=float("-inf"), beta=float("inf")):
         """Implement depth-limited minimax search with alpha-beta pruning as
@@ -306,4 +369,58 @@ class AlphaBetaPlayer(IsolationPlayer):
             raise SearchTimeout()
 
         # TODO: finish this function!
-        raise NotImplementedError
+        best_score = float("-inf")
+        best_move = (-1, -1)
+        for m in game.get_legal_moves():
+            v = self.min_value(game.forecast_move(m), depth - 1, alpha, beta)
+            alpha = max(alpha, v)
+            if v > best_score:
+                best_score = v
+                best_move = m
+        return best_move
+
+    # Helper functions for alphabeta
+    def terminal_test(self, game, depth):
+        """ Return True if the game is over for the active player
+        and False otherwise OR depth == 0.
+        """
+        if self.time_left() < self.TIMER_THRESHOLD:
+            raise SearchTimeout()
+
+        return not bool(game.get_legal_moves()) or (depth == 0)
+
+    def min_value(self, game, depth, alpha, beta):
+        """ Return the value for a win (+1) if the game is over,
+        otherwise return the minimum value over all legal child
+        nodes.
+        """
+        if self.time_left() < self.TIMER_THRESHOLD:
+            raise SearchTimeout()
+
+        if self.terminal_test(game, depth):
+            return self.score(game, self)
+        v = float("inf")
+        for m in game.get_legal_moves():
+            v = min(v, self.max_value(game.forecast_move(m), depth - 1, alpha, beta))
+            if v <= alpha:
+                return v
+            beta = min(beta, v)
+        return v
+
+    def max_value(self, game, depth, alpha, beta):
+        """ Return the value for a loss (-1) if the game is over,
+        otherwise return the maximum value over all legal child
+        nodes.
+        """
+        if self.time_left() < self.TIMER_THRESHOLD:
+            raise SearchTimeout()
+
+        if self.terminal_test(game, depth):
+            return self.score(game, self)
+        v = float("-inf")
+        for m in game.get_legal_moves():
+            v = max(v, self.min_value(game.forecast_move(m), depth - 1, alpha, beta))
+            if v >= beta:
+                return v
+            alpha = max(alpha, v)
+        return v
