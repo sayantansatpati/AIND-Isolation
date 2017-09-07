@@ -36,7 +36,8 @@ def custom_score(game, player):
     """
     # TODO: finish this function!
     player_moves = game.get_legal_moves(player)
-    return float(len(player_moves))
+    opponent_moves = game.get_legal_moves(game.get_opponent(player))
+    return float(len(player_moves) - 2 * len(opponent_moves))
 
 
 def custom_score_2(game, player):
@@ -64,7 +65,7 @@ def custom_score_2(game, player):
     # TODO: finish this function!
     player_moves = game.get_legal_moves(player)
     opponent_moves = game.get_legal_moves(game.get_opponent(player))
-    return float(len(player_moves) - len(opponent_moves))
+    return float(2 * len(player_moves) - 3 * len(opponent_moves))
 
 
 def custom_score_3(game, player):
@@ -92,7 +93,7 @@ def custom_score_3(game, player):
     # TODO: finish this function!
     player_moves = game.get_legal_moves(player)
     opponent_moves = game.get_legal_moves(game.get_opponent(player))
-    return float(len(player_moves) - 2 * len(opponent_moves))
+    return float(len(player_moves) - 3 * len(opponent_moves))
 
 
 class IsolationPlayer:
@@ -162,7 +163,7 @@ class MinimaxPlayer(IsolationPlayer):
 
         # Initialize the best move so that this function returns something
         # in case the search fails due to timeout
-        best_move = (-1, -1)
+        best_move = (-1,-1)
 
         try:
             # The try/except block will automatically catch the exception
@@ -219,8 +220,11 @@ class MinimaxPlayer(IsolationPlayer):
 
         # TODO: finish this function!
         best_score = float("-inf")
-        best_move = (-1,-1)
-        for m in game.get_legal_moves():
+        best_move = (-1, -1)
+        legal_moves = game.get_legal_moves()
+        if len(legal_moves) > 0:
+            best_move = legal_moves[0]
+        for m in legal_moves:
             v = self.min_value(game.forecast_move(m), depth - 1)
             if v > best_score:
                 best_score = v
@@ -371,7 +375,10 @@ class AlphaBetaPlayer(IsolationPlayer):
         # TODO: finish this function!
         best_score = float("-inf")
         best_move = (-1, -1)
-        for m in game.get_legal_moves():
+        legal_moves = game.get_legal_moves()
+        if len(legal_moves) > 0:
+            best_move = legal_moves[0]
+        for m in legal_moves:
             v = self.min_value(game.forecast_move(m), depth - 1, alpha, beta)
             alpha = max(alpha, v)
             if v > best_score:
